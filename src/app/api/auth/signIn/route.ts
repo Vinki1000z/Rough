@@ -3,15 +3,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import dbConnect from '@/lib/dbConnect';
-import User from '@/models/User';
+import {connect} from '@/dbConfig/dbConfig';
+import User from '@/model/userModal';
 
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
 
     // Connect to the database
-    await dbConnect();
+    await connect();
 
     // Find the user by email
     const user = await User.findOne({ email });
@@ -35,6 +35,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: 'Sign-in successful', token }, { status: 200 });
   } catch (error) {
     console.error('Error during sign-in:', error);
-    return NextResponse.json({ message: error.message || 'Failed to sign in' }, { status: 500 });
+    return NextResponse.json({ message: error.message || 'Failed to sign in use correct email or password' }, { status: 500 });
   }
 }

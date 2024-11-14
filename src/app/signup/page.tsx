@@ -1,9 +1,12 @@
 "use client";
+import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler, FieldValues } from "react-hook-form";
 import { z } from "zod";
-
+import axios from 'axios';
 import { Button } from "@/components/ui/button";
+import { toast } from "react-hot-toast";
+import { useRouter } from 'next/navigation'; // Use 'next/router' for pages directory in Next.js 12
 import {
   Form,
   FormControl,
@@ -14,20 +17,19 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-// Create schema with validation for username, email, and password
 const formSchema = z.object({
-  username: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
-  }),
-  email: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
-  password: z.string().min(6, {
-    message: "Password must be at least 6 characters.",
-  }),
+  username: z.string().min(2, { message: "Username must be at least 2 characters." }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
 });
 
 export default function Page() {
+  const router = useRouter();
+
+  useEffect(() => {
+    toast.success("Welcome!!");
+  }, []);
+
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -37,21 +39,27 @@ export default function Page() {
     },
   });
 
+  useEffect(() => {
+    form.setValue("username", "");
+  }, [form]);
+
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     try {
       const response = await axios.post('/api/auth/signUp', data);
-      console.log('User created successfully:', response.data);
-      // Handle success, maybe redirect to login or dashboard
+      console.log(response);
+      toast.success("Account created successfully! You can now log in.");
+      router.push("/signin");
     } catch (error) {
-      console.error('Error creating user:', error.response?.data || error.message);
-      // Handle error (show error message to the user)
+      const errorMessage = error.response?.data?.message || error.message;
+      console.log(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
   return (
     <div className="flex justify-center py-20" style={{ alignItems: "center" }}>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}  className="space-y-8 shadow-custom p-4 rounded-lg">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 shadow-custom p-4 rounded-lg">
           <FormField
             control={form.control}
             name="username"

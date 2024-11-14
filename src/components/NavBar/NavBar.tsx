@@ -7,25 +7,22 @@ import { useRouter } from "next/navigation";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import CustomImage from './to-do-list.png'
 import Image from "next/image";
+import { SVGProps } from "react";
+
 export default function Component() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
+  // Check sessionStorage on initial render
   useEffect(() => {
     const token = sessionStorage.getItem("token");
-
-    if (token) {
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-      router.push("/signup");
-    }
-  }, [router]);
+    setIsAuthenticated(!!token); // If token exists, set as authenticated
+  }, []); // Only runs once when component mounts
 
   const handleLogout = () => {
     sessionStorage.removeItem("token");
-    setIsAuthenticated(false);
-    router.push("/signup");
+    setIsAuthenticated(false); // Set to false on logout
+    router.push("/signup"); // Redirect after logout
   };
 
   return (
@@ -41,41 +38,50 @@ export default function Component() {
         <SheetContent side="left">
           <DialogTitle className="sr-only">Navigation Menu</DialogTitle>
           <Link href="#" className="mr-6 hidden lg:flex" prefetch={false}>
-          <Image src={CustomImage} alt="Custom Icon" width={24} height={24} className="h-6 w-6" />
+            <Image src={CustomImage} alt="Custom Icon" width={24} height={24} className="h-6 w-6" />
             <span className="sr-only">Acme Inc</span>
           </Link>
           <div className="grid gap-2 py-6">
-            <Link href="#" className="flex w-full items-center py-2 text-lg font-semibold" prefetch={false}>
-              Home
-            </Link>
-            <Link href="#" className="flex w-full items-center py-2 text-lg font-semibold" prefetch={false}>
-              About
-            </Link>
-            <Link href="#" className="flex w-full items-center py-2 text-lg font-semibold" prefetch={false}>
-              Services
-            </Link>
-            <Link href="#" className="flex w-full items-center py-2 text-lg font-semibold" prefetch={false}>
-              Contact
-            </Link>
+            {isAuthenticated ? (
+              <> <Button
+                  onClick={handleLogout}
+                  variant="outline"
+                  className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 hover:text-gray-900 border-2 border-black"
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/signup"
+                  className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 hover:text-gray-900 border-2 border-black"
+                  prefetch={false}
+                >
+                  Sign Up
+                </Link>
+                <Link
+                  href="/signin"
+                  className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 hover:text-gray-900  border-2 border-black"
+                  prefetch={false}
+                >
+                  Sign In
+                </Link>
+              </>
+            )}
           </div>
         </SheetContent>
       </Sheet>
 
       <Link href="#" className="mr-6 hidden lg:flex" prefetch={false}>
-      <Image src={CustomImage} alt="Custom Icon" width={24} height={24} className="h-6 w-6" />
+        <Image src={CustomImage} alt="Custom Icon" width={24} height={24} className="h-6 w-6" />
         <span className="sr-only">Acme Inc</span>
       </Link>
 
       <nav className="ml-auto hidden lg:flex gap-6">
         {isAuthenticated ? (
           <>
-            <Link
-              href="/home"
-              className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 hover:text-gray-900  border-2 border-black"
-              prefetch={false}
-            >
-              Home
-            </Link>
+       
             <Button
               onClick={handleLogout}
               variant="outline"
@@ -107,7 +113,7 @@ export default function Component() {
   );
 }
 
-function MenuIcon(props: any) {
+function MenuIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
@@ -127,4 +133,3 @@ function MenuIcon(props: any) {
     </svg>
   );
 }
-

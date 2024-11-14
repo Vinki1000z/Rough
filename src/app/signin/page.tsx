@@ -3,7 +3,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler, FieldValues } from "react-hook-form";
 import { z } from "zod";
 import axios from "axios";
-
+import { toast } from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -26,6 +27,7 @@ const signInSchema = z.object({
 });
 
 export default function SignInPage() {
+  const router = useRouter();
   const form = useForm({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -37,10 +39,28 @@ export default function SignInPage() {
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     try {
       const response = await axios.post('/api/auth/signIn', data);
+      if (response.data && typeof response.data === 'object' && 'token' in response.data) {
+        const token = (response.data as { token: string }).token;
+        if (!token) throw new Error("Token not found in the response");
+        sessionStorage.setItem('token', token);
+      }  
+      const storedToken = sessionStorage.getItem('token');
+      if (storedToken) {
+        console.log("Token stored successfully:", storedToken);
+      } else {
+        console.error("Failed to store token");
+      }
+  
+      // Store token in sessionStorage (or localStorage if persistence is desired)
       console.log('User signed in successfully:', response.data);
+      toast.success('Sign-in successful! Redirecting...');
+      router.push('/dashboard/home');
+      
       // Handle success, redirect or show a success message
     } catch (error) {
       console.error('Error signing in:', error.response?.data || error.message);
+      const errorMessage = error.response?.data?.message || error.message;
+      toast.error(errorMessage);
       // Handle error (show error message to the user)
     }
   };

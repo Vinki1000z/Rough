@@ -1,27 +1,46 @@
 "use client"
 import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
-import { EventModal } from "@/components/Calendar/EventModal"; // Modal for viewing event details
-import { EventFormModal } from "@/components/Calendar/EventFormModal"; // Modal for adding new events
+import { EventModal } from "@/components/Calendar/EventModal";
+import { EventFormModal } from "@/components/Calendar/EventFormModal";
+import { IEvent } from "@/model/eventModal";
 
 export default function Page() {
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [events, setEvents] = useState<any[]>([]); // State to store events
-  const [selectedEvent, setSelectedEvent] = useState<any | null>(null); // State to store selected event for modal
+  const [events, setEvents] = useState<IEvent[]>([]); // State to store events
+  const [selectedEvent, setSelectedEvent] = useState<IEvent | null>(null); // State to store selected event for modal
   const [showModal, setShowModal] = useState<boolean>(false); // State to control modal visibility
   const [showAddEventModal, setShowAddEventModal] = useState<boolean>(false); // State to control the Add Event modal
-  const [newEvent, setNewEvent] = useState({
+  const [newEvent, setNewEvent] = useState<{
+    title: string;
+    description: string;
+    date: Date | undefined;
+    completionDate: Date | undefined;
+  }>({
     title: "",
     description: "",
     date: date,
-  }); // New event form data
+    completionDate: undefined,
+  });
 
   // Fetch events from the backend API
   useEffect(() => {
     const fetchEvents = async () => {
-      const response = await fetch("/api/events"); // Assume /api/events will return a list of events
-      const data = await response.json();
-      setEvents(data);
+      try {
+        const response = await fetch("/api/event"); // Assume /api/events will return a list of events
+        const data = await response.json();
+
+        // Ensure the response data is an array
+        if (Array.isArray(data)) {
+          setEvents(data);
+        } else {
+          console.error("Unexpected response format", data);
+          setEvents([]); // Fallback to empty array if the response is not valid
+        }
+      } catch (error) {
+        console.error("Error fetching events", error);
+        setEvents([]); // Fallback to empty array if there is an error
+      }
     };
 
     fetchEvents();
@@ -29,7 +48,8 @@ export default function Page() {
 
   // Handle new event creation
   const handleAddEvent = async () => {
-    const response = await fetch("/api/events", {
+    console.log(newEvent);
+    const response = await fetch("/api/event", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -50,13 +70,8 @@ export default function Page() {
 
       <div className="flex justify-evenly bg-white p-4 rounded-lg shadow-md">
         {/* Left Side: Calendar */}
-        <div className="w-1/2">
-          <Calendar
-            mode="single"
-            selected={date}
-            onSelect={setDate}
-            className="rounded-md border"
-          />
+        <div className="w-1/2 flex justify-center">
+          <Calendar mode="single" selected={date} onSelect={setDate} />
         </div>
 
         {/* Right Side: Event list and add event button */}
@@ -72,31 +87,34 @@ export default function Page() {
           {/* Event List */}
           <div>
             <h2 className="text-lg font-semibold mb-4">All Events</h2>
-            <ul>
-              {events.map((event) => (
-                <li
-                  key={event._id}
-                  className="cursor-pointer mb-2 p-2 border rounded-md hover:bg-gray-100"
-                  onClick={() => {
-                    setSelectedEvent(event);
-                    setShowModal(true); // Show modal with event details
-                  }}
-                >
-                  <p className="font-bold">{event.title}</p>
-                  <p>{new Date(event.date).toLocaleDateString()}</p>
-                </li>
-              ))}
-            </ul>
+
+            {/* Show message if no events */}
+            {events.length === 0 ? (
+              <p className="text-center text-gray-500">Please add events.</p>
+            ) : (
+              <ul>
+                {events.map((event) => (
+                  <li
+                    key={event?._id?.toString()} // Ensuring _id is treated as a string
+                    className="cursor-pointer mb-2 p-2 border rounded-md hover:bg-gray-100"
+                    onClick={() => {
+                      setSelectedEvent(event);
+                      setShowModal(true); // Show modal with event details
+                    }}
+                  >
+                    <p className="font-bold">{event.title}</p>
+                    <p>{new Date(event.date).toLocaleDateString()}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       </div>
 
       {/* Event Modal */}
       {showModal && (
-        <EventModal
-          event={selectedEvent}
-          onClose={() => setShowModal(false)}
-        />
+        <EventModal event={selectedEvent} onClose={() => setShowModal(false)} />
       )}
 
       {/* Add Event Modal */}

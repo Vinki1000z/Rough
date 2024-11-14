@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
-import dbConnect from '@/dbConfig/dbConfig'; // Import the database connection
+import {connect} from '@/dbConfig/dbConfig'; // Import the database connection
 import User from '@/model/userModal'; // Import the User model
 
 // Define schema for request validation
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const { username, email, password } = signupSchema.parse(body);
 
     // Connect to the database
-    await dbConnect();
+    await connect();
 
     // Check if the user already exists
     const existingUser = await User.findOne({ email });
