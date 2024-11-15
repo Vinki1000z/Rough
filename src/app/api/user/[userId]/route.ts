@@ -4,7 +4,7 @@ import { connect } from '@/dbConfig/dbConfig';
 import User from '@/model/userModal'; // Import User model
 
 // Handle GET request to retrieve user score
-export const GET = async (req: NextRequest, { params }: { params: { userId: string } }) => {
+export const GET = async (req: NextRequest, { params }: { params: Promise<{ userId: string }> }) => {
   try {
     await connect(); // Ensure you're connected to the database
 
