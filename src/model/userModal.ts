@@ -1,5 +1,3 @@
-// models/User.ts
-
 import mongoose, { Schema, Document } from 'mongoose';
 
 // Define the interface for the User document
@@ -22,7 +20,7 @@ const userSchema = new Schema<IUser>({
   timestamps: true, // Automatically adds createdAt and updatedAt fields
 });
 
-// Create the User model
-const User = mongoose.model<IUser>('User', userSchema);
+// Check if the model already exists, if so use the existing one
+const User = mongoose.models.User || mongoose.model<IUser>('User', userSchema);
 
 export default User;

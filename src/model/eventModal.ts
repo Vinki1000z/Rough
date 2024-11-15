@@ -6,6 +6,7 @@ export interface IEvent extends Document {
   date: Date;
   completionDate: Date | undefined;
   status: string;
+  userId:  mongoose.Schema.Types.ObjectId;
 }
 
 const eventSchema = new Schema<IEvent>({
@@ -14,6 +15,10 @@ const eventSchema = new Schema<IEvent>({
   date: { type: Date, required: true },
   completionDate: { type: Date },
   status: { type: String, default: 'pending' },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'  // Ensure this is correct and matches the User model
+  },
 });
 
 // Check if the model already exists in the mongoose models registry

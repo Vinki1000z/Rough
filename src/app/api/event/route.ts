@@ -1,63 +1,68 @@
 import { NextRequest, NextResponse } from 'next/server'; // Use NextRequest and NextResponse
-import Event from '@/model/eventModal'; // Adjust the path to your Event model
-import { getDataFromToken } from '@/helper/getDataFromToken'; // Adjust the path to the utility function
+import Event from '@/model/eventModal'; // Adjust the path to your Event models
 import { connect } from '@/dbConfig/dbConfig'; // Ensure the database connection is correct
+export const GET = async (req: Request) => {
+    try {
+      // Get the user ID from the headers
+      const userId = req.headers.get('userId');
 
-// GET - Fetch events for a specific user based on the user ID
-export const GET = async () => {
-  try {
-    // Get the user ID from the token
-    const userId = getDataFromToken(); // This will get the user ID from the token
-    if (!userId) {
-      return NextResponse.json({ message: 'User is not authenticated' }, { status: 401 });
+      console.log(userId)
+      // Validate that the user ID is provided
+      if (!userId) {
+        return NextResponse.json({ message: 'User ID is missing' }, { status: 400 });
+      }
+  
+      await connect();
+  
+      // Fetch the events for the specific user
+      const events = await Event.find({ userId: userId })// Populate user data if needed
+      console.log(events);
+      return NextResponse.json(events);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      return NextResponse.json({ message: 'Error fetching events for the user' }, { status: 500 });
     }
-
-    await connect();
-
-    // Fetch the events for the specific user
-    const events = await Event.find({ user: userId }).populate('user', 'name'); // Populate user data if needed
-    return NextResponse.json(events);
-  } catch (error) {
-    console.error('Error fetching events:', error);
-    return NextResponse.json({ message: 'Error fetching events for the user' }, { status: 500 });
-  }
-};
+  };
 
 // POST - Add a new event (with completionDate handling)
 export const POST = async (req: NextRequest) => {
-  try {
-    await connect();
+    try {
+      await connect();
+  
+      // Get the user ID from the headers
+      const userId = req.headers.get('userId');
+      // console.log(userId+"wdqdq");
+      // Validate that the user ID is provided
+      if (!userId) {
+        return NextResponse.json({ message: 'User is not authenticated' }, { status: 401 });
+      }
+  
+      // Parse the request body
+      const { title, description, date, status, completionDate } = await req.json();
+  
+      // Check for required fields
+      if (!title || !description || !date) {
+        // console.log(title, description, date, status, completionDate);
+        return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
+      }
+  
+      // Create a new event document
+      const newEvent = new Event({
+        title,
+        description,
+        date,
+        status: status || 'pending',
+        userId: userId,
+        ...(completionDate && { completionDate }),
+      });
 
-    // Get the user ID from the token
-    const userId = getDataFromToken();  // This will use the function you wrote to get the user ID from the token
-    if (!userId) {
-      return NextResponse.json({ message: 'User is not authenticated' }, { status: 401 });
+      // console.log(newEvent);
+      await newEvent.save();
+      return NextResponse.json(newEvent, { status: 201 });
+    } catch (error) {
+      console.error('Error adding event:', error);
+      return NextResponse.json({ message: 'Error adding event' }, { status: 500 });
     }
+  };
 
-    // Parse the request body
-    const { title, description, date, status, completionDate } = await req.json(); // Use req.json() to parse body
-
-    // Make sure the required fields are present
-    if (!title || !description || !date) {
-      console.log(title, description, date, status, completionDate);
-      return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
-    }
-
-    // Create a new event document
-    const newEvent = new Event({
-      title,
-      description,
-      date,
-      status: status || 'pending',  // Default to 'pending' if no status is provided
-      user: userId,  // Set the user to the ID fetched from the token
-      // Only include completionDate if it's provided
-      ...(completionDate && { completionDate }),
-    });
-
-    await newEvent.save();
-    return NextResponse.json(newEvent, { status: 201 });
-  } catch (error) {
-    console.error('Error adding event:', error);
-    return NextResponse.json({ message: 'Error adding event' }, { status: 500 });
-  }
-};
+  
