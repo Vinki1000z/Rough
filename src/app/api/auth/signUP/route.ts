@@ -15,6 +15,8 @@ const signupSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("API endpoint hit");
+
     // Parse the request body
     const body = await request.json();
     const { username, email, password } = signupSchema.parse(body);

@@ -45,7 +45,8 @@ export default function Page() {
 
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     try {
-      const response = await axios.post('/api/auth/signUp', data);
+      console.log(data);
+      const response = await axios.post('/api/auth/signUP', data);
       console.log(response);
       toast.success("Account created successfully! You can now log in.");
       router.push("/signin");

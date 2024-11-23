@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 export async function connect() {
     try {
-        mongoose.connect(process.env.MONGO_URI!);
+        mongoose.connect(("mongodb+srv://vikrantchauhancf2021:OSHT62ec2XkLTbKl@docuville.obwio.mongodb.net/calendarToDo?retryWrites=true&w=majority")!);
         const connection = mongoose.connection;
 
         connection.on('connected', () => {

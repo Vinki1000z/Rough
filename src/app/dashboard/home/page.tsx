@@ -80,6 +80,20 @@ export default function Page() {
     fetchUserData();
   }, [date]); // Trigger fetch every time the date changes
 
+  const isOverlapping = (newEvent:any, existingEvents: IEvent[]): boolean => {
+    const newStart = new Date(newEvent.date).getTime();
+    const newEnd = new Date(newEvent.completionDate ?? newEvent.date).getTime();
+  
+    return existingEvents.some(event => {
+      const existingStart = new Date(event.date).getTime();
+      const existingEnd = new Date(event.completionDate ?? event.date).getTime();
+  
+      // Check if the new event overlaps with an existing event
+      return newStart < existingEnd && newEnd > existingStart;
+    });
+  };
+  
+
   // Handle new event creation and send userId
   const handleAddEvent = async () => {
     const userId = getDataFromToken(); // Get the user ID from the token
@@ -91,6 +105,11 @@ export default function Page() {
       console.error("User is not authenticated");
       return; // Exit the function if userId is null or undefined
     }
+    if (isOverlapping(eventWithUserId, events)) {
+      toast.error("The new event overlaps with an existing event. Please choose a different time.");
+      return;
+    }
+
     const response = await fetch("/api/event", {
       method: "POST",
       headers: {
