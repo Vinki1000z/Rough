@@ -35,7 +35,7 @@ export default function Page() {
     defaultValues: {
       username: "",
       email: "",
-      password: "",
+      password: "" ,
     },
   });
 
